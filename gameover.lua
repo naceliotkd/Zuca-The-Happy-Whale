@@ -20,6 +20,8 @@ end
 
 function scene:destroyScene( event )
 	local group = self.view
+	
+	
 end
 
 scene:addEventListener( "createScene", scene )
