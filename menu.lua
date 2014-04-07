@@ -24,9 +24,7 @@ function scene:createScene( event )
 	background.anchorX = 0
 	background.anchorY = 0
 	
-	-- local titleLogo = display.newText( "Zuca", 264, 42, "Marker Felt", 43 )
-	-- titleLogo.x = display.contentWidth * 0.5
-	-- titleLogo.y = 100
+
 	
 	playBtn = widget.newButton{
 		label="Jogar",
@@ -40,7 +38,7 @@ function scene:createScene( event )
 	playBtn.y = display.contentHeight - 125
 	
 	group:insert( background )
-	-- group:insert( titleLogo )
+
 	group:insert( playBtn )
 end
 
