@@ -5,6 +5,21 @@
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 
+local score
+local vidas
+local tempo
+local txt_counter
+local vidasTxt
+local scoreTxt
+
+local coinSpriteData = require "resources.coinSpriteData"
+
+local coinSprite = graphics.newImageSheet( 'images/coin-sprite.png', coinSpriteData )
+local coinSpriteOptions = {
+	{ name="default", start=1, count=10, time=600, loop=1 }
+}
+
+
 display.setStatusBar( display.HiddenStatusBar )
 local jump = audio.loadStream( "sounds/jump.wav" )
 local showCredits = {}
@@ -18,6 +33,7 @@ local _H = display.contentHeight
 
 local physics = require "physics"
 physics.start()
+
 --------------------------------------------------------------------------------------------------------------------
 
 -- Musica de Fundo
@@ -31,6 +47,7 @@ local backgroundMusicChannel = audio.play( backgroundMusic, {loops= -1}  )
 local character
 local background
 local background1
+local barra 
 
 
 -- adicionando items a tela
@@ -47,49 +64,7 @@ end
 --------------------------------------------------------------------------------------------------------------------
 
 
--- Texto Score
-local score = display.newText("Score:    ", 20, 10)
-score:setTextColor(255, 255, 255)
-score.rotation = 0
-score.size = 20
 
-score = display.newText('0', 80,10, 'Marker Felt', 18)
-score:setTextColor(255,255,255)
-
---------------------------------------------------------------------------------------------------------------------
--- Texto Vidas
-local vidas = display.newText("Vidas:    ", 200, 10)
-vidas:setTextColor(255, 255, 255)
-vidas.rotation = 0
-vidas.size = 20
-
-vidas = display.newText('0', 250,10, 'Marker Felt', 18)
-vidas:setTextColor(255,255,255)
-
---------------------------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------------------------	
-	
-	
--- Texto Time
-local tempo = display.newText("Time:", 370, 10)
-tempo:setTextColor(255, 255, 255)
-tempo.rotation = 0
-tempo.size = 20
-
---------------------------------------------------------------------------------------------------------------------
--- Time
-display.setStatusBar(display.HiddenStatusBar) _W = display.contentWidth _H = display.contentHeight number = 0
- 
-local txt_counter = display.newText( number, 0, 0, native.systemFont, 20 )
-txt_counter.x = 450
-txt_counter.y = 20
-txt_counter:setTextColor( 255, 255, 255 )
-function fn_counter()
-number = number + 1
-txt_counter.text = number
-end
-timer.performWithDelay(1000, fn_counter, 0)
 ----------------------------------------------------------------------------------------------------------------------
 
 --ADD IMAGEM NO CHÃO
@@ -230,11 +205,13 @@ local yPos = {_H*0.2, _H*0.4, _H*0.6, _H*0.8}
 local arrayMoeda = {'images/moeda.png', 'images/moeda2.png', 'images/moeda3.png'}
 
 function criarMoedas()
-	local moeda = display.newImage(arrayMoeda[math.floor(math.random()*3)+1], _W, yPos[math.floor(math.random() * 4)+1])
+	local moeda = display.newSprite( coinSprite, coinSpriteOptions ) --display.newImage(arrayMoeda[math.floor(math.random()*3)+1], _W, yPos[math.floor(math.random() * 4)+1])
+	moeda.x, moeda.y = _W, yPos[math.floor(math.random() * 4)+1]
 	physics.addBody(moeda, 'kinematic')
 	moeda.isSensor = true
 	moeda.tipo = 'moeda'
 	moedas:insert(moeda)
+	moeda:play()
 end
 
 function updateMoedas()
@@ -276,6 +253,8 @@ end
 
 local timerLixo = timer.performWithDelay(2000, criarLixos, 0)
 ------------------------------------------------------------------------------------------------------
+
+
 
 -- Sprite
 
@@ -341,12 +320,84 @@ function createListeners()
 	Runtime:addEventListener("enterFrame", background1)
 end
 
+function removeListeners() 
+	character:removeEventListener( "touch", charactertouch )
+
+	-- trocar para toque na tela
+	Runtime:removeEventListener( "touch", onScreenTouch )
+
+	Runtime:removeEventListener( "enterFrame", showFPS )
+
+	Runtime:removeEventListener('enterFrame', subirBolhas)
+
+	Runtime:removeEventListener('enterFrame', updateMoedas)
+
+	Runtime:removeEventListener('enterFrame', updateLixos)
+	
+	background.enterFrame= scrollCity
+	Runtime:removeEventListener("enterFrame", background)	
+	background1.enterFrame= scrollCity
+	Runtime:removeEventListener("enterFrame", background1)
+
+	timer.cancel( timerMoeda )
+	timerMoeda = nil
+
+	timer.cancel( timerLixo )
+	timerLixo = nil
+end
+
 
 function scene:createScene( event )
 	local group = self.view
+		
+
+		-- Texto Score
+	scoreTxt = display.newText("Score:    ", 20, 10, native.systemFont, 18)
+	scoreTxt:setTextColor(96, 51, 43)
+	scoreTxt.rotation = 0
+	--scoreTxt.size = 20
 	
+	score = display.newText('0', 90,10, native.systemFont, 18)
+	score:setTextColor(255,255,255)
+	--score.size = 20
+	--------------------------------------------------------------------------------------------------------------------
+	-- Texto Vidas
+	vidasTxt = display.newText("Lifes:    ", 200, 10, native.systemFont, 18)
+	vidasTxt:setTextColor(96, 51, 43)
+	vidasTxt.rotation = 0
+	--vidasTxt.size = 20
+
 	
+	vidas = display.newText('0', 255,10, native.systemFont, 18)
+	vidas:setTextColor(255,255,255)
+	--vidas.size = 20
+	--------------------------------------------------------------------------------------------------------------------
+
+	--------------------------------------------------------------------------------------------------------------------	
+		
+		
+	-- Texto Time
+	 tempo = display.newText("Time:", 370, 10, native.systemFont, 18)
+	tempo:setTextColor(96, 51, 43)
+	tempo.rotation = 0
+	--tempo.size = 20
+
+	--------------------------------------------------------------------------------------------------------------------
+	-- Time
+	display.setStatusBar(display.HiddenStatusBar) _W = display.contentWidth _H = display.contentHeight number = 0
+	 
+	 txt_counter = display.newText( number, 0, 0, 'Marker Felt', 18 )
+	txt_counter.x = 450
+	txt_counter.y = 20
+	txt_counter:setTextColor( 255, 255, 255 )
+	function fn_counter()
+	number = number + 1
+	txt_counter.text = number
+	end
+	timer.performWithDelay(1000, fn_counter, 0)
+
 	
+		
 	-- Rolando fundo da tela ---
 
 	background = display.newImage('images/BG_Oficial.png')
@@ -371,7 +422,7 @@ function scene:createScene( event )
 	vidas.text = character.vidas
 	
 	
-	createListeners()
+	
 	
 	
 	group:insert(background)
@@ -379,42 +430,30 @@ function scene:createScene( event )
 	group:insert(moedas)
 	group:insert(lixos)
 	group:insert(character)
+	group:insert(txt_counter)
+	group:insert(tempo)
+	group:insert(vidas)
+	group:insert(score)
+	group:insert(vidasTxt)
+	group:insert(scoreTxt)
 end
 
 function scene:enterScene( event )
 	local group = self.view
+	--moedas=display.newGroup()
+	createListeners()
 end
 
 function scene:exitScene( event )
 	local group = self.view
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("destroy scene..........")
-	print(group.numChildren)
+
+	removeListeners()
+	audio.stop()
 end
 
 function scene:destroyScene( event )
 	local group = self.view
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("******************************************")
-	print("destroy scene..........")
-	print(group.numChildren)
+	
 end
 
 scene:addEventListener( "createScene", scene )
