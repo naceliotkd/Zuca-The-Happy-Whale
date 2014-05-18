@@ -23,9 +23,10 @@ local lose
 local _W = display.contentWidth
 
 function scene:createScene( event )
-	group = self.view 
+	-- storyboard.purgeScene( "inicio" )
+	-- storyboard.removeScene('inicio')
 
-	--storyboard.removeScene('inicio')
+	group = self.view 
 	
 	local background = display.newImage( "images/gameover.jpg")
 	
@@ -81,6 +82,7 @@ end
 
 function scene:enterScene( event )
 	local group = self.view
+	storyboard.removeScene('inicio')
 end
 
 function scene:exitScene( event )
