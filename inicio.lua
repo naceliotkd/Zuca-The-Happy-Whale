@@ -61,7 +61,7 @@ local barra
 
 function scrollCity(self,event)
 	if self.x < -955 then
-		self.x = 960
+		self.x = 959
 	else
 		self.x = self.x - self.speed
 	end	
@@ -307,7 +307,7 @@ function createListeners()
 	background1.enterFrame= scrollCity
 	Runtime:addEventListener("enterFrame", background1)
 	Runtime:addEventListener('enterFrame', updateBauEVida)
-	timerBau = timer.performWithDelay((math.floor(math.random() * 20000)+10000), criarBau, 0)
+	timerBau = timer.performWithDelay((math.floor(math.random() * 15000)+5000), criarBau, 0)
 	timer1Up = timer.performWithDelay((math.floor(math.random() * 50000)+20000), criar1Up, 0)
 end
 
@@ -398,7 +398,7 @@ function scene:createScene( event )
 		
 	background1 = display.newImage('images/BG_Oficial.png')
 	background1:setReferencePoint(display.BottomLeftReferencePoint)
-	background1.x = 960
+	background1.x = 959
 	background1.y = 320
 	background1.speed = 0.5	
 	
