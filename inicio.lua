@@ -5,12 +5,22 @@
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 
+-- get our screen dimensions
+local _W = display.contentWidth
+local _H = display.contentHeight
+
 local score
 local vidas
 local tempo
 local txt_counter
 local vidasTxt
 local scoreTxt
+local life
+
+local moedas = display.newGroup()
+local velocidadeMoeda = 1
+local yPos = {_H*0.2, _H*0.4, _H*0.6, _H*0.8}
+local arrayMoeda = {'images/moeda.png', 'images/moeda2.png', 'images/moeda3.png'}
 
 local coinSpriteData = require "resources.coinSpriteData"
 
@@ -23,10 +33,6 @@ local coinSpriteOptions = {
 display.setStatusBar( display.HiddenStatusBar )
 local jump = audio.loadStream( "sounds/jump.wav" )
 local showCredits = {}
-
--- get our screen dimensions
-local _W = display.contentWidth
-local _H = display.contentHeight
 
 --------------------------------------------------------------------------------------------------------------------
 -- adicionando fisica ao jogo
@@ -64,34 +70,25 @@ end
 --------------------------------------------------------------------------------------------------------------------
 
 
-
-----------------------------------------------------------------------------------------------------------------------
-
---ADD IMAGEM NO CHÃO
-
---local ground = display.newImage( "images/ground.png" )
---ground.x, ground.y = 240, 335 
-
---local groundShape = { -240,-20, 240,-20, 240,20, -240,20 }
---physics.addBody( ground, "static", { friction=3.0, density=1.0, bounce=0.0, shape=groundShape } )
-
----------------------------------------------------------------------------------------------------
+local lifesPngs = {'images/1vida.png', 'images/2vidas.png', 'images/3vidas.png'}
 
 local moedaSound = audio.loadStream( "sounds/moedas4.ogg" )
 
 function onCollision(event)
+	local zuca = event.target
 	local other = event.other
+
 	if other.tipo == 'moeda' then
 		display.remove(event.other)
 		audio.play(moedaSound) -- Adiciona som a colisao
 		score.text= tostring(tonumber(score.text)+10)  --Adiciona os valores ao score
 	elseif other.tipo == 'lixo' then
-		if event.target.vidas == 1 then
+		if zuca.vidas == 1 then
 		
 			local options =
 				{
 					effect = "fade",
-					time = 400,
+					time = 100,
 					params = {
 								score = score.text
 							}
@@ -102,9 +99,24 @@ function onCollision(event)
 		display.remove(other)
 		audio.play(moedaSound) -- Adiciona som a colisao
 		event.target.vidas = event.target.vidas - 1
-		vidas.text= tostring(tonumber(event.target.vidas))  --remove vida
+
+		life:removeSelf()
+		life = display.newImage(lifesPngs[zuca.vidas], _W/2-42, 10)
 		
+	elseif other.tipo == 'vida' then
+		if zuca.vidas < 3 then
+			zuca.vidas = zuca.vidas + 1
+		end
+
+		other:removeSelf()
+		life:removeSelf()
+		life = display.newImage(lifesPngs[zuca.vidas], _W/2-42, 10)
+	elseif other.tipo == 'bau' then
+		score.text= tostring(tonumber(score.text)+50)
+		other:removeSelf()
 	end
+
+	print(other.tipo)
 	
 end
 
@@ -112,23 +124,49 @@ end
 
 
 
--- criando limites
---------------------------------------------------------------------------------------------------------------------
 
--- criação das paredes que servirão de limite
--- parede esquerda
+local baus = display.newGroup()
+local vidasEspeciais = display.newGroup()
 
---local leftWall = display.newRect(0, 0, 1, _H)
---leftWall.x = 0
---leftWall.y = _H/2
---physics.addBody( leftWall, "static", {density = 1.0, friction = 0.3, bounce = 0.2} )
 
--- parede direita
---local rightWall = display.newRect(0, 0, 1, _H)
---rightWall.x = _W
---rightWall.y = _H/2
---physics.addBody( rightWall, "static", {density = 1.0, friction = .6, bounce = 0.2} )
---------------------------------------------------------------------------------------------------------------------
+function updateBauEVida(event)
+	if baus ~= nil then
+		for i = 1, baus.numChildren do
+			local bau = baus[i]
+			bau.x = bau.x - 1
+		end
+	end
+
+	if vidasEspeciais ~= nil then
+		for i = 1, vidasEspeciais.numChildren do
+			local vida = vidasEspeciais[i]
+			vida.x = vida.x - 1
+		end
+	end
+end
+
+
+function criarBau()
+	local bau = display.newImage('images/bau.png')
+	bau.x = _W
+	bau.y = yPos[math.floor(math.random() * 4)+1]
+	physics.addBody(bau, 'kinematic')
+	bau.isSensor = true
+	bau.tipo = 'bau'
+
+	baus:insert(bau)
+end
+
+function criar1Up()
+	local vida = display.newImage('images/1up.png')
+	vida.x = _W
+	vida.y = yPos[math.floor(math.random() * 4)+1]
+	physics.addBody(vida, 'kinematic')
+	vida.isSensor = true
+	vida.tipo = 'vida'
+
+	vidasEspeciais:insert(vida)
+end
 
 
 -- Criar o objecto rectangular mesmo tamanho e colocá-lo na parte superior da tela
@@ -199,11 +237,6 @@ end
 
 -- Moedas
 
-local moedas = display.newGroup()
-local velocidadeMoeda = 2
-local yPos = {_H*0.2, _H*0.4, _H*0.6, _H*0.8}
-local arrayMoeda = {'images/moeda.png', 'images/moeda2.png', 'images/moeda3.png'}
-
 function criarMoedas()
 	local moeda = display.newSprite( coinSprite, coinSpriteOptions ) --display.newImage(arrayMoeda[math.floor(math.random()*3)+1], _W, yPos[math.floor(math.random() * 4)+1])
 	moeda.x, moeda.y = _W, yPos[math.floor(math.random() * 4)+1]
@@ -229,7 +262,7 @@ local timerMoeda = timer.performWithDelay(1000, criarMoedas, 0)
 -- lixo
 
 local lixos = display.newGroup()
-local velocidadeLixos = 2
+local velocidadeLixos = 1
 local arrayLixo = {'images/pet.png', 'images/pneu.png', 'images/saco.png'}
 
 local yPosLixo = {_H*0.3, _H*0.5, _H*0.7, _H*0.9}
@@ -255,51 +288,6 @@ local timerLixo = timer.performWithDelay(2000, criarLixos, 0)
 ------------------------------------------------------------------------------------------------------
 
 
-
--- Sprite
-
--- local options = {
-   -- width = 32,
-   -- height = 32,
-   -- numFrames = 16
--- }
-
--- local sequenceData = {
-   -- { name = "city0", start=1, count=1, time=0,   loopCount=1 },
-   -- { name = "city01", start=1, count=2, time=100, loopCount=1 },
-   -- { name = "city02", start=1, count=3, time=200, loopCount=1 },
-   -- { name = "city03", start=1, count=4, time=300, loopCount=1 },
-   -- { name = "city04", start=1, count=5, time=400, loopCount=1 },
-   -- { name = "city05", start=1, count=6, time=500, loopCount=1 },
-   -- { name = "city06", start=1, count=7, time=600, loopCount=1 },
-   -- { name = "city07", start=1, count=8, time=700, loopCount=1 },
-   -- { name = "city08", start=1, count=9, time=800, loopCount=1 },
-   -- { name = "city09", start=1, count=10, time=900, loopCount=1 },
-   -- { name = "city10", start=1, count=11, time=1000, loopCount=1 },
-   -- { name = "city11", start=1, count=12, time=1100, loopCount=1 },
-   -- { name = "city12", start=1, count=13, time=1200, loopCount=1 },
-   -- { name = "city13", start=1, count=14, time=1300, loopCount=1 },
-   -- { name = "city14", start=1, count=15, time=1400, loopCount=1 },
-   -- { name = "city15", start=1, count=16, time=1500, loopCount=0 }, 
--- }
-
--- local runningSheet = graphics.newImageSheet( "/images/spritesheetRunning.png", options )
--- local runningSprite = display.newSprite( runningSheet, sequenceData )
--- runningSprite.isFixedRotation = true
--- runningSprite:setSequence( "city15" )
--- runningSprite:play()
-
--- runningSprite.x = 40
--- runningSprite.y = 280
--- physics.addBody( runningSprite, { friction=1.0, density=1.0, bounce=0.3, radius=0 } )
-
---------------------------------------------------------------------------------------------------------------------
-
-
---Runtime:addEventListener( "enterFrame", move )
-
-
-
 function createListeners() 
 	character:addEventListener( "touch", charactertouch )
 
@@ -318,6 +306,9 @@ function createListeners()
 	Runtime:addEventListener("enterFrame", background)	
 	background1.enterFrame= scrollCity
 	Runtime:addEventListener("enterFrame", background1)
+	Runtime:addEventListener('enterFrame', updateBauEVida)
+	timerBau = timer.performWithDelay((math.floor(math.random() * 20000)+10000), criarBau, 0)
+	timer1Up = timer.performWithDelay((math.floor(math.random() * 50000)+20000), criar1Up, 0)
 end
 
 function removeListeners() 
@@ -338,12 +329,19 @@ function removeListeners()
 	Runtime:removeEventListener("enterFrame", background)	
 	background1.enterFrame= scrollCity
 	Runtime:removeEventListener("enterFrame", background1)
+	Runtime:removeEventListener('enterFrame', updateBauEVida)
 
 	timer.cancel( timerMoeda )
 	timerMoeda = nil
 
 	timer.cancel( timerLixo )
 	timerLixo = nil
+
+	timer.cancel( timerBau )
+	timerBau = nil
+
+	timer.cancel( timer1Up )
+	timer1Up = nil
 end
 
 
@@ -352,43 +350,35 @@ function scene:createScene( event )
 		
 
 		-- Texto Score
-	scoreTxt = display.newText("Score:    ", 20, 10, native.systemFont, 18)
-	scoreTxt:setTextColor(96, 51, 43)
-	scoreTxt.rotation = 0
-	--scoreTxt.size = 20
+	local ImgScore = display.newImage('images/moeda.png', 20, 12, 0, 0)
+	--scoreTxt = display.newText("Score:    ", 20, 10, native.systemFont, 18)
+	--scoreTxt:setTextColor(96, 51, 43)
+	--scoreTxt.rotation = 0
 	
-	score = display.newText('0', 90,10, native.systemFont, 18)
+	
+	score = display.newText('0', 70,15, native.systemFont, 18)
 	score:setTextColor(255,255,255)
-	--score.size = 20
-	--------------------------------------------------------------------------------------------------------------------
-	-- Texto Vidas
-	vidasTxt = display.newText("Lifes:    ", 200, 10, native.systemFont, 18)
-	vidasTxt:setTextColor(96, 51, 43)
-	vidasTxt.rotation = 0
-	--vidasTxt.size = 20
-
-	
-	vidas = display.newText('0', 255,10, native.systemFont, 18)
-	vidas:setTextColor(255,255,255)
-	--vidas.size = 20
-	--------------------------------------------------------------------------------------------------------------------
-
-	--------------------------------------------------------------------------------------------------------------------	
 		
+
+	life = display.newImage('images/3vidas.png', _W/2-42, 10)
+
+
+
 		
 	-- Texto Time
-	 tempo = display.newText("Time:", 370, 10, native.systemFont, 18)
-	tempo:setTextColor(96, 51, 43)
-	tempo.rotation = 0
-	--tempo.size = 20
+	local Imgtime = display.newImage('images/crono.png', 380, 5, 0, 0)
+	--tempo = display.newText("Time:", 370, 10, native.systemFont, 18)
+	--tempo:setTextColor(96, 51, 43)
+	--tempo.rotation = 0
+	
 
 	--------------------------------------------------------------------------------------------------------------------
 	-- Time
 	display.setStatusBar(display.HiddenStatusBar) _W = display.contentWidth _H = display.contentHeight number = 0
 	 
-	 txt_counter = display.newText( number, 0, 0, 'Marker Felt', 18 )
+	 txt_counter = display.newText( number, 0, 0, native.systemFont, 18 )
 	txt_counter.x = 450
-	txt_counter.y = 20
+	txt_counter.y = 25
 	txt_counter:setTextColor( 255, 255, 255 )
 	function fn_counter()
 	number = number + 1
@@ -419,7 +409,11 @@ function scene:createScene( event )
 	physics.addBody( character, { friction=0.1, density=1, bounce=0.2, radius=35 } )
 	character:addEventListener('collision', onCollision)
 	character.vidas = 3
-	vidas.text = character.vidas
+	
+
+
+
+	-- vidas.text = character.vidas
 	
 	
 	
@@ -431,17 +425,28 @@ function scene:createScene( event )
 	group:insert(lixos)
 	group:insert(character)
 	group:insert(txt_counter)
-	group:insert(tempo)
-	group:insert(vidas)
+	--group:insert(tempo)
+	group:insert(life)
+	-- group:insert(vidas)
 	group:insert(score)
-	group:insert(vidasTxt)
-	group:insert(scoreTxt)
+	--group:insert(scoreTxt)
+	group:insert(bolhas)
+	group:insert(bolhas2)
+	group:insert(bolhas3)
+	group:insert(baus)
+	group:insert(vidasEspeciais)
+	group:insert(ImgScore)
+	group:insert(Imgtime)
 end
 
 function scene:enterScene( event )
 	local group = self.view
 	--moedas=display.newGroup()
+	storyboard.removeScene('gameover')
+	storyboard.removeScene('menu')
 	createListeners()
+	print("velocidade moeda: " .. velocidadeMoeda)
+	print("velocidade lixo: " .. velocidadeLixos)
 end
 
 function scene:exitScene( event )
@@ -453,7 +458,6 @@ end
 
 function scene:destroyScene( event )
 	local group = self.view
-	
 end
 
 scene:addEventListener( "createScene", scene )
