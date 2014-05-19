@@ -344,6 +344,32 @@ function removeListeners()
 	timer1Up = nil
 end
 
+local zucaSpriteData = {}
+zucaSpriteData.frames = {
+	{
+		x = 0,
+		y = 0,
+		width = 100,
+		height = 51
+	},
+	{
+		x = 112,
+		y = 0,
+		width = 101,
+		height = 51
+	},
+	{
+		x = 230,
+		y = 0,
+		width = 99,
+		height = 51
+	}
+}
+
+local zucaSprite = graphics.newImageSheet( 'images/sprite.png', zucaSpriteData )
+local zucaSpriteOptions = {
+	{ name="default", start=1, count=3, time=600, loop=0 }
+}
 
 function scene:createScene( event )
 	local group = self.view
@@ -403,13 +429,13 @@ function scene:createScene( event )
 	background1.speed = 0.5	
 	
 	-- Caracter Zuca
-	character = display.newImage( "images/zuca.png" )
+	character = display.newSprite( zucaSprite, zucaSpriteOptions )
 	character.x = 60
 	character.y = 230
 	physics.addBody( character, { friction=0.1, density=1, bounce=0.2, radius=35 } )
 	character:addEventListener('collision', onCollision)
 	character.vidas = 3
-	
+	character:play()
 
 
 
@@ -418,6 +444,8 @@ function scene:createScene( event )
 	
 	
 	
+	
+
 	
 	group:insert(background)
 	group:insert(background1)
@@ -438,6 +466,8 @@ function scene:createScene( event )
 	group:insert(ImgScore)
 	group:insert(Imgtime)
 end
+
+
 
 function scene:enterScene( event )
 	local group = self.view
