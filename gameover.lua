@@ -19,12 +19,11 @@ end
 
 
 local lose
--- get our screen dimensions
+-- DIMENÇÕES
 local _W = display.contentWidth
 
 function scene:createScene( event )
-	-- storyboard.purgeScene( "inicio" )
-	-- storyboard.removeScene('inicio')
+	
 
 	group = self.view 
 	
@@ -32,8 +31,7 @@ function scene:createScene( event )
 	
 	
 	local params = event.params
-	--local lose = display.newText("Game Over", 145, 60, nil, 36)
-	--lose:setTextColor(0,0,0)
+	
 	
 	lose = display.newText("Score: " .. params.score, 175, 90, nil, 36)
 	lose:setTextColor(255,255,255)
