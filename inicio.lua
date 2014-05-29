@@ -5,7 +5,7 @@
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 
--- get our screen dimensions
+-- dimenções da tela
 local _W = display.contentWidth
 local _H = display.contentHeight
 
@@ -16,6 +16,9 @@ local txt_counter
 local vidasTxt
 local scoreTxt
 local life
+
+
+-- sprite das moedas
 
 local moedas = display.newGroup()
 local velocidadeMoeda = 1
@@ -29,7 +32,7 @@ local coinSpriteOptions = {
 	{ name="default", start=1, count=10, time=600, loop=1 }
 }
 
-
+-- som de movimento
 display.setStatusBar( display.HiddenStatusBar )
 local jump = audio.loadStream( "sounds/jump.wav" )
 local showCredits = {}
@@ -49,17 +52,17 @@ local backgroundMusicChannel = audio.play( backgroundMusic, {loops= -1}  )
 -- -----------------------------------------------------------------------------------------------------------------
 
 
--- GLOBALS
+-- GLOBAIS
 local character
 local background
 local background1
 local barra 
 
 
--- adicionando items a tela
+-- SCROLL DO BACKGROUND
 --------------------------------------------------------------------------------------------------------------------
 
-function scrollCity(self,event)
+function scrollZuca(self,event)
 	if self.x < -955 then
 		self.x = 959
 	else
@@ -69,11 +72,14 @@ end
 
 --------------------------------------------------------------------------------------------------------------------
 
-
+-- IMAGENS DAS VIDAS
 local lifesPngs = {'images/1vida.png', 'images/2vidas.png', 'images/3vidas.png'}
 
+-- SOM MOEDAS
 local moedaSound = audio.loadStream( "sounds/moedas4.ogg" )
 
+
+-- COLISÃO DOS OBJETOS
 function onCollision(event)
 	local zuca = event.target
 	local other = event.other
@@ -102,7 +108,9 @@ function onCollision(event)
 
 		life:removeSelf()
 		life = display.newImage(lifesPngs[zuca.vidas], _W/2-42, 10)
-		
+	
+
+	-- VIDA EXTRA
 	elseif other.tipo == 'vida' then
 		if zuca.vidas < 3 then
 			zuca.vidas = zuca.vidas + 1
@@ -124,7 +132,7 @@ end
 
 
 
-
+-- PONTOS EXTRAS BAÚ
 local baus = display.newGroup()
 local vidasEspeciais = display.newGroup()
 
@@ -145,7 +153,7 @@ function updateBauEVida(event)
 	end
 end
 
-
+-- BAÚ
 function criarBau()
 	local bau = display.newImage('images/bau.png')
 	bau.x = _W
@@ -157,6 +165,7 @@ function criarBau()
 	baus:insert(bau)
 end
 
+-- VIDAS EXTRA
 function criar1Up()
 	local vida = display.newImage('images/1up.png')
 	vida.x = _W
@@ -206,7 +215,7 @@ end
 
 
 local function showFPS( event )
-	--print( display.fps )
+	
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -302,9 +311,9 @@ function createListeners()
 
 	Runtime:addEventListener('enterFrame', updateLixos)
 	
-	background.enterFrame= scrollCity
+	background.enterFrame= scrollZuca
 	Runtime:addEventListener("enterFrame", background)	
-	background1.enterFrame= scrollCity
+	background1.enterFrame= scrollZuca
 	Runtime:addEventListener("enterFrame", background1)
 	Runtime:addEventListener('enterFrame', updateBauEVida)
 	timerBau = timer.performWithDelay((math.floor(math.random() * 15000)+5000), criarBau, 0)
@@ -325,9 +334,9 @@ function removeListeners()
 
 	Runtime:removeEventListener('enterFrame', updateLixos)
 	
-	background.enterFrame= scrollCity
+	background.enterFrame= scrollZuca
 	Runtime:removeEventListener("enterFrame", background)	
-	background1.enterFrame= scrollCity
+	background1.enterFrame= scrollZuca
 	Runtime:removeEventListener("enterFrame", background1)
 	Runtime:removeEventListener('enterFrame', updateBauEVida)
 
@@ -344,6 +353,8 @@ function removeListeners()
 	timer1Up = nil
 end
 
+
+-- SPRITE BALEIA
 local zucaSpriteData = {}
 zucaSpriteData.frames = {
 	{
@@ -375,23 +386,20 @@ function scene:createScene( event )
 	local group = self.view
 		
 
-		-- Texto Score
+		-- EXIBIR SCORE
 	local ImgScore = display.newImage('images/moeda.png', 20, 12, 0, 0)
-	--scoreTxt = display.newText("Score:    ", 20, 10, native.systemFont, 18)
-	--scoreTxt:setTextColor(96, 51, 43)
-	--scoreTxt.rotation = 0
 	
 	
 	score = display.newText('0', 70,15, native.systemFont, 18)
 	score:setTextColor(255,255,255)
 		
-
+	-- EXIBIR VIDAS
 	life = display.newImage('images/3vidas.png', _W/2-42, 10)
 
 
 
 		
-	-- Texto Time
+	-- EXIBIR TEMPO
 	local Imgtime = display.newImage('images/crono.png', 380, 5, 0, 0)
 	--tempo = display.newText("Time:", 370, 10, native.systemFont, 18)
 	--tempo:setTextColor(96, 51, 43)
@@ -399,7 +407,7 @@ function scene:createScene( event )
 	
 
 	--------------------------------------------------------------------------------------------------------------------
-	-- Time
+	-- CONTAGEM TEMPO
 	display.setStatusBar(display.HiddenStatusBar) _W = display.contentWidth _H = display.contentHeight number = 0
 	 
 	 txt_counter = display.newText( number, 0, 0, native.systemFont, 18 )
@@ -439,7 +447,7 @@ function scene:createScene( event )
 
 
 
-	-- vidas.text = character.vidas
+	
 	
 	
 	
@@ -453,11 +461,11 @@ function scene:createScene( event )
 	group:insert(lixos)
 	group:insert(character)
 	group:insert(txt_counter)
-	--group:insert(tempo)
+	
 	group:insert(life)
-	-- group:insert(vidas)
+	
 	group:insert(score)
-	--group:insert(scoreTxt)
+	
 	group:insert(bolhas)
 	group:insert(bolhas2)
 	group:insert(bolhas3)
@@ -471,7 +479,7 @@ end
 
 function scene:enterScene( event )
 	local group = self.view
-	--moedas=display.newGroup()
+	
 	storyboard.removeScene('gameover')
 	storyboard.removeScene('menu')
 	createListeners()
